@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+    const outlineContainer = document.getElementById('outlineContainer');
+    const searchInput = document.getElementById('search');
+    const groupFilter = document.getElementById('groupFilter');
+    const viewCards = document.getElementById('viewCards');
+    const viewOutline = document.getElementById('viewOutline');
+    const outlineView = document.getElementById('outlineView');
+
+    function render(data) {
+      cardsView.innerHTML = '';
+      outlineContainer.innerHTML = '';
+
+      data.forEach(section => {
+        const card = document.createElement('div');
+        card.className = 'card section';
+        card.innerHTML = `
+          <div class="section-head">
+            <div class="icon">${section.icon}</div>
+            <div>
+              <div class="group">${section.group}</div>
+              <h3>${section.title}</h3>
+              <p>${section.summary}</p>
+            </div>
+          </div>
+          <div class="chips">${section.chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+          <ul class="detail-list">${section.details.map(d => `<li>${d}</li>`).join('')}</ul>
+          <div class="links">${section.sources.map(s => `<a href="${s}" target="_blank">Quelle öffnen</a>`).join('')}</div>
+        `;
+        cardsView.appendChild(card);
+      });
+
+      const grouped = {};
+      data.forEach(item => {
+        if (!grouped[item.group]) grouped[item.group] = [];
+        grouped[item.group].push(item);
+      });
+
+      Object.keys(grouped).forEach(group => {
+        const block = document.createElement('div');
+        block.className = 'outline-group';
+        block.innerHTML = `<h2>${group}</h2>` + grouped[group].map(item => `
+          <div class="outline-item">
+            <h3>${item.title}</h3>
+            <p>${item.summary}</p>
+            <ul class="detail-list" style="margin-top:10px">${item.details.map(d => `<li>${d}</li>`).join('')}</ul>
+            <div class="links">${item.sources.map(s => `<a href="${s}" target="_blank">Quelle öffnen</a>`).join('')}</div>
+          </div>
+        `).join('');
+        outlineContainer.appendChild(block);
+      });
+    }
+
+    function applyFilter() {
+      const q = searchInput.value.trim().toLowerCase();
+      const g = groupFilter.value;
+      const filtered = sections.filter(section => {
+        const hay = [section.title, section.group, section.summary, ...section.details, ...section.chips].join(' ').toLowerCase();
+        const okGroup = g === 'Alle' || section.group === g;
+        const okQuery = !q || hay.includes(q);
+        return okGroup && okQuery;
+      });
+      render(filtered);
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+    groupFilter.addEventListener('change', applyFilter);
+    viewCards.addEventListener('click', () => {
+      viewCards.classList.add('active');
+      viewOutline.classList.remove('active');
+      cardsView.classList.remove('hidden');
+      outlineView.classList.add('hidden');
+    });
+    viewOutline.addEventListener('click', () => {
+      viewOutline.classList.add('active');
+      viewCards.classList.remove('active');
+      outlineView.classList.remove('hidden');
+      cardsView.classList.add('hidden');
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        ['contentTab', 'managementTab', 'limitsTab'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById(btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    render(sections);
+  </script>
+</body>
+</html>
